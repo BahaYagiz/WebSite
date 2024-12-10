@@ -1,0 +1,17 @@
+﻿@{
+    ViewData["Title"] = "Rol Sil";
+    Layout = "_LayoutAdmin";
+}
+
+<h2>Rol Sil</h2>
+
+<p>Bu rolü silmek istediğinizden emin misiniz?</p>
+
+<form method="post">
+    <div class="form-group">
+        <label>Rol Adı: @Model.Name</label>
+    </div>
+
+    <button type="submit" class="btn btn-danger">Sil</button>
+    <a href="@Url.Action("Index", "Role")" class="btn btn-secondary">İptal</a>
+</form>

@@ -1,0 +1,79 @@
+﻿@{
+    Layout = "_LayoutAdmin";
+}
+@model ReportModel
+@if (TempData["Success"] != null)
+{
+    <script>
+        toastr.success('@TempData["Success"]');
+    </script>
+}
+
+@if (TempData["Error"] != null)
+{
+    <script>
+        toastr.error('@TempData["Error"]');
+    </script>
+}
+@section CardHeader {
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <h5 class="mb-0 text-primary">Haber Düzenle</h5>
+    </div>
+}
+
+<form asp-controller="Report" asp-action="Update" method="post" enctype="multipart/form-data">
+    <!-- Hidden input for the Id (to identify the report) -->
+    <input type="hidden" asp-for="Id" />
+
+    <div class="mb-3">
+        <label asp-for="Title" class="form-label"></label>
+        <input asp-for="Title" class="form-control" />
+        <span class="text-danger" asp-validation-for="Title"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label"></label>
+        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+        <span class="text-danger" asp-validation-for="Description"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Content" class="form-label"></label>
+        <textarea asp-for="Content" class="form-control" rows="5"></textarea>
+        <span class="text-danger" asp-validation-for="Content"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="CategoryId" class="form-label">Kategori</label>
+        <select asp-for="CategoryId" class="form-control" asp-items="@ViewBag.Categories">
+            <option value="">Seçiniz</option>
+        </select>
+        <span class="text-danger" asp-validation-for="CategoryId"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="AuthorName" class="form-label">Yazar</label>
+        <input asp-for="AuthorName" class="form-control" />
+        <span class="text-danger" asp-validation-for="AuthorName"></span>
+    </div>
+
+    <div class="mb-3">
+        <label for="PhotoFile" class="form-label">Fotoğraf Yükle (Yeni Fotoğraf Seçebilirsiniz)</label>
+        <input type="file" class="form-control" id="PhotoFile" name="PhotoFile" />
+        <span class="text-danger" asp-validation-for="PhotoFile"></span>
+    </div>
+
+    <div class="mb-2">
+        <input asp-for="IsActive" class="form-check-inline" />
+        <label class="form-label" asp-for="IsActive"></label>
+        <span class="text-danger" asp-validation-for="IsActive"></span>
+    </div>
+
+    <div class="mb-3">
+        <input type="submit" value="Güncelle" class="btn btn-primary btn-sm" />
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

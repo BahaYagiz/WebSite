@@ -1,0 +1,51 @@
+﻿@{
+    Layout = "_LayoutAdmin";
+}
+@section CardHeader {
+    <span>Kategori Düzenle</span>
+}
+@model CategoryModel
+
+@if (TempData["Success"] != null)
+{
+    <script>
+        toastr.success('@TempData["Success"]');
+    </script>
+}
+
+@if (TempData["Error"] != null)
+{
+    <script>
+        toastr.error('@TempData["Error"]');
+    </script>
+}
+
+
+
+<div class="row">
+    <div class="col-md-4">
+        <form asp-controller="Category" asp-action="Update" method="post">
+
+            <div class="mb-2">
+                <label asp-for="Name"></label>
+                <input asp-for="Id" class="form-control" type="hidden" />
+                <input asp-for="Name" class="form-control" />
+                <span class="text-danger" asp-validation-for="Name"></span>
+            </div>
+
+            <div class="mb-2">
+
+                <input asp-for="IsActive" class="form-check-input" />
+                <label asp-for="IsActive"></label>
+                <span class="text-danger" asp-validation-for="IsActive"></span>
+            </div>
+            <div class="mb-2">
+                <input type="submit" value="Kaydet" class="btn btn-primary btn-sm" />
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

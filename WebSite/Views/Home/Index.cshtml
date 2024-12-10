@@ -1,0 +1,23 @@
+﻿@model List<ReportModel>
+
+<div class="container">
+    <div class="row">
+        @foreach (var item in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm h-100">
+                    <img src="@Url.Content("~" + item.PhotoUrl)" alt="@item.Title" class="card-img-top img-fluid" style="height: 200px; object-fit: cover;">
+                    <div class="card-body">
+                        <h5 class="card-title">@item.Title</h5>
+                        <p class="card-text">@item.Description</p>
+                        <p class="text-muted">Yazar: @item.AuthorName</p>
+                    </div>
+                    <div class="card-footer text-center">
+                        <!-- asp-controller ve asp-action ile yönlendirme -->
+                        <a asp-controller="Details" asp-action="Index" asp-route-id="@item.Id" class="btn btn-primary">Daha Fazla</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

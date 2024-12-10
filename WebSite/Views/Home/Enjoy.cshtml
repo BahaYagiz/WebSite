@@ -1,0 +1,202 @@
+﻿
+@{
+    ViewData["Title"] = "Enjoy";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Oyunu</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .quiz-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+
+        #question {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+
+        #options div {
+            background-color: #f1f1f1;
+            margin: 5px;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        #options div:hover {
+            background-color: #ddd;
+        }
+
+        #score {
+            font-size: 18px;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <div id="question"></div>
+        <div id="options"></div>
+        <button id="next-btn">Sonraki</button>
+        <div id="score"></div>
+    </div>
+
+    <script>
+        const questions = [
+            { text: "Türkiye'nin başkenti neresidir?", options: ["İstanbul", "Ankara", "İzmir", "Bursa"], answer: 1 },
+            { text: "Dünyanın en büyük okyanusu hangisidir?", options: ["Atlantik", "Pasifik", "Hint", "Arktik"], answer: 1 },
+            { text: "Ay'ın Dünya etrafında dönüş süresi kaç gündür?", options: ["30", "29", "27", "31"], answer: 2 },
+            { text: "Türkiye'nin en kalabalık şehri hangisidir?", options: ["Ankara", "İstanbul", "İzmir", "Bursa"], answer: 1 },
+            { text: "Türkiye'nin başkenti neresidir?", options: ["İstanbul", "Ankara", "İzmir", "Bursa"], answer: 1 },
+            { text: "Dünyanın en büyük okyanusu hangisidir?", options: ["Atlantik", "Pasifik", "Hint", "Arktik"], answer: 1 },
+            { text: "Ay'ın Dünya etrafında dönüş süresi kaç gündür?", options: ["30", "29", "27", "31"], answer: 2 },
+            { text: "Türkiye'nin en kalabalık şehri hangisidir?", options: ["Ankara", "İstanbul", "İzmir", "Bursa"], answer: 1 },
+            { text: "En küçük asal sayı nedir?", options: ["1", "2", "3", "0"], answer: 1 },
+            { text: "Güneş sistemi kaç gezegen içerir?", options: ["7", "8", "9", "10"], answer: 1 },
+            { text: "İnsan vücudunda kaç kemik vardır?", options: ["206", "208", "210", "212"], answer: 0 },
+            { text: "Dünya'nın en uzun nehri hangisidir?", options: ["Amazon", "Nil", "Yangtze", "Mississippi"], answer: 1 },
+            { text: "Türk bayrağındaki hilal neyi temsil eder?", options: ["Ay", "Yıldız", "Bağımsızlık", "Savaş"], answer: 0 },
+            { text: "Bir yıl kaç haftadır?", options: ["50", "52", "54", "56"], answer: 1 },
+            { text: "En hızlı kara hayvanı hangisidir?", options: ["Aslan", "Ceylan", "Çita", "At"], answer: 2 },
+            { text: "Türkiye'nin en yüksek dağı hangisidir?", options: ["Erciyes", "Kaçkar", "Ağrı", "Palandöken"], answer: 2 },
+            { text: "Atomun merkezi kısmına ne ad verilir?", options: ["Elektron", "Proton", "Nötron", "Çekirdek"], answer: 3 },
+            { text: "Matematikte Pi sayısı yaklaşık olarak nedir?", options: ["3.14", "2.72", "1.62", "4.13"], answer: 0 },
+            { text: "Hangi ülke Eiffel Kulesi'ne sahiptir?", options: ["Almanya", "Fransa", "İtalya", "İspanya"], answer: 1 },
+            { text: "İlk Türk alfabesi hangisidir?", options: ["Göktürk", "Osmanlıca", "Arapça", "Latin"], answer: 0 },
+            { text: "Kutup ayılarının doğal yaşam alanı neresidir?", options: ["Antarktika", "Arktik", "Grönland", "Sibirya"], answer: 1 },
+            { text: "Dünya'daki en yüksek şelale hangisidir?", options: ["Niagara", "Angel", "Victoria", "Iguazu"], answer: 1 },
+            { text: "Elektrik akımını ölçen cihaza ne ad verilir?", options: ["Voltmetre", "Ampermetre", "Ohmmetre", "Galvanometre"], answer: 1 },
+            { text: "İstanbul hangi iki kıta arasında yer alır?", options: ["Avrupa ve Asya", "Asya ve Afrika", "Avrupa ve Afrika", "Amerika ve Asya"], answer: 0 },
+            { text: "Einstein'ın ünlü formülü nedir?", options: ["F=ma", "E=mc²", "V=IR", "P=IV"], answer: 1 },
+            { text: "Bir saatte kaç saniye vardır?", options: ["3600", "2400", "7200", "4800"], answer: 0 },
+            { text: "Türkiye'nin en büyük gölü hangisidir?", options: ["Van Gölü", "Tuz Gölü", "Beyşehir Gölü", "Eğirdir Gölü"], answer: 0 },
+            { text: "En küçük memeli hayvan nedir?", options: ["Yarasa", "Cüce Fare", "Karınca Yiyen", "Tarsier"], answer: 1 },
+            { text: "İlk yazılı kanunlar hangi medeniyet tarafından yapılmıştır?", options: ["Hititler", "Babil", "Asurlar", "Sümerler"], answer: 1 },
+            { text: "Hangi gezegen Güneş'e en yakındır?", options: ["Venüs", "Merkür", "Dünya", "Mars"], answer: 1 },
+            { text: "Dünya'nın çevresi yaklaşık kaç kilometredir?", options: ["40,000", "50,000", "30,000", "25,000"], answer: 0 },
+            { text: "Hangi ülke en fazla nüfusa sahiptir?", options: ["Hindistan", "Çin", "ABD", "Rusya"], answer: 1 },
+            { text: "Hangi metal elektrik iletkenliğinde en iyisidir?", options: ["Bakır", "Altın", "Gümüş", "Alüminyum"], answer: 2 },
+            { text: "Suyun donma noktası nedir?", options: ["0°C", "32°C", "100°C", "-10°C"], answer: 0 },
+            { text: "Dünya'nın uydusu nedir?", options: ["Güneş", "Mars", "Ay", "Venüs"], answer: 2 },
+            { text: "Türk lirasının simgesi nedir?", options: ["TL", "₺", "$", "€"], answer: 1 },
+            { text: "Hangi spor futbolda kullanılan bir terimdir?", options: ["Gol", "Koşu", "As", "Tur"], answer: 0 },
+            { text: "Dünya'nın en derin noktası neresidir?", options: ["Mariana Çukuru", "Everest", "Himalayalar", "Atlas Çukuru"], answer: 0 },
+            { text: "İnsanın en büyük iç organı nedir?", options: ["Mide", "Karaciğer", "Akciğer", "Böbrek"], answer: 1 },
+            { text: "Dünya'nın en büyük çölü hangisidir?", options: ["Sahara", "Gobi", "Atacama", "Antarktika"], answer: 0 },
+            { text: "Kan grubunu kim keşfetti?", options: ["Alexander Fleming", "Karl Landsteiner", "Louis Pasteur", "Joseph Lister"], answer: 1 },
+            { text: "Kütle çekim yasasını kim bulmuştur?", options: ["Albert Einstein", "Isaac Newton", "Galileo Galilei", "Johannes Kepler"], answer: 1 },
+            { text: "Güneş'in yüzeyi hangi elementten oluşur?", options: ["Helyum", "Hidrojen", "Oksijen", "Karbon"], answer: 1 },
+            { text: "Bir gün kaç saattir?", options: ["12", "24", "36", "48"], answer: 1 },
+            { text: "Bir kilogram kaç gramdır?", options: ["10", "100", "1000", "10000"], answer: 2 },
+            { text: "Bir haftada kaç gün vardır?", options: ["5", "6", "7", "8"], answer: 2 },
+            { text: "İstanbul'un Fethi hangi yılda gerçekleşmiştir?", options: ["1453", "1492", "1071", "1923"], answer: 0 },
+            { text: "Türkiye'nin bağımsızlık savaşı hangi antlaşmayla sona ermiştir?", options: ["Lozan", "Sevr", "Mondros", "Versay"], answer: 0 },
+            { text: "Güneş sistemindeki en büyük gezegen hangisidir?", options: ["Dünya", "Jüpiter", "Satürn", "Neptün"], answer: 1 },
+            { text: "Hangi madde oda sıcaklığında sıvıdır?", options: ["Altın", "Cıva", "Bakır", "Demir"], answer: 1 },
+            { text: "Bir yılda kaç ay vardır?", options: ["10", "11", "12", "13"], answer: 2 },
+            { text: "Türkiye'nin ilk başbakanı kimdir?", options: ["İsmet İnönü", "Mustafa Kemal Atatürk", "Adnan Menderes", "Turgut Özal"], answer: 0 },
+            { text: "En büyük yırtıcı kara hayvanı hangisidir?", options: ["Ayı", "Kaplan", "Aslan", "Kurt"], answer: 0 },
+            { text: "Bir futbol takımı sahada kaç oyuncu ile oynar?", options: ["10", "11", "12", "13"], answer: 1 },
+            { text: "Bir litre kaç mililitreye eşittir?", options: ["100", "500", "1000", "2000"], answer: 2 },
+            { text: "Hangi element sembolü 'O' harfidir?", options: ["Oksijen", "Altın", "Bakır", "Azot"], answer: 0 },
+            { text: "Dünya'nın en yüksek dağı hangisidir?", options: ["Everest", "K2", "Kangchenjunga", "Lhotse"], answer: 0 },
+            { text: "Türkiye'nin ilk Cumhurbaşkanı kimdir?", options: ["İsmet İnönü", "Mustafa Kemal Atatürk", "Celal Bayar", "Turgut Özal"], answer: 1 },
+            { text: "Bir asır kaç yıldır?", options: ["10", "50", "100", "1000"], answer: 2 },
+            { text: "En küçük kuş türü hangisidir?", options: ["Serçe", "Kolibri", "Bülbül", "Kırlangıç"], answer: 1 },
+            { text: "Türk alfabesi kaç harften oluşur?", options: ["28", "29", "30", "31"], answer: 1 },
+            { text: "Türkiye'nin en uzun nehri hangisidir?", options: ["Kızılırmak", "Yeşilırmak", "Fırat", "Dicle"], answer: 0 },
+            { text: "Hangi elementin atom numarası 1'dir?", options: ["Helyum", "Hidrojen", "Oksijen", "Azot"], answer: 1 },
+            { text: "Ay'a ilk ayak basan astronot kimdir?", options: ["Buzz Aldrin", "Neil Armstrong", "Yuri Gagarin", "Alan Shepard"], answer: 1 },
+            { text: "Bir yumurtanın pişme süresi ortalama kaç dakikadır?", options: ["3", "5", "7", "10"], answer: 1 },
+            { text: "Hangi renk tüm renklerin birleşiminden oluşur?", options: ["Siyah", "Beyaz", "Kırmızı", "Mavi"], answer: 1 },
+            { text: "Kabe hangi şehirde bulunmaktadır?", options: ["Medine", "Mekke", "Riyad", "Taif"], answer: 1 },
+            { text: "Türkiye hangi yarım kürede yer alır?", options: ["Kuzey", "Güney", "Doğu", "Batı"], answer: 0 },
+            { text: "Bir futbol maçı kaç dakika sürer?", options: ["60", "70", "90", "120"], answer: 2 },
+            { text: "Dünya'nın eksen eğikliği kaç derecedir?", options: ["23.5", "24", "25", "26"], answer: 0 },
+            { text: "Hangi hayvanın dişleri dışarıdadır?", options: ["Fil", "Kaplan", "Kutup Ayısı", "Su Aygırı"], answer: 0 },
+            { text: "Deniz seviyesinden en düşük noktada yer alan deniz hangisidir?", options: ["Kızıldeniz", "Karadeniz", "Lut Gölü", "Ölü Deniz"], answer: 3 },
+            { text: "Bir yıl kaç gün sürer (ortalama)?", options: ["364", "365", "366", "367"], answer: 1 },
+            { text: "DNA'nın açılımı nedir?", options: ["Deoxyribonucleic Acid", "Deoxyribonucleic Base", "Ribonucleic Acid", "Deoxyribonucleic Chain"], answer: 0 },
+            { text: "Şimşek oluşumu sırasında hangi gaz açığa çıkar?", options: ["Hidrojen", "Oksijen", "Ozon", "Azot"], answer: 2 },
+            { text: "Türkiye'nin en batısında yer alan il hangisidir?", options: ["Edirne", "Çanakkale", "Kırklareli", "Tekirdağ"], answer: 0 },
+            { text: "Osmanlı İmparatorluğu'nun son padişahı kimdir?", options: ["Abdülmecid", "Mehmed V", "Mehmed VI", "Abdülhamid II"], answer: 2 },
+            { text: "Gün doğumunun diğer adı nedir?", options: ["Gurup", "Şafak", "Alacakaranlık", "Tan"], answer: 3 },
+            { text: "Bir bardakta yaklaşık kaç mililitre su vardır?", options: ["100", "200", "300", "400"], answer: 1 }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        function loadQuestion() {
+            const currentQuestion = questions[currentQuestionIndex];
+            document.getElementById("question").textContent = currentQuestion.text;
+            const optionsDiv = document.getElementById("options");
+            optionsDiv.innerHTML = '';
+
+            currentQuestion.options.forEach((option, index) => {
+                const optionDiv = document.createElement("div");
+                optionDiv.textContent = option;
+                optionDiv.onclick = () => checkAnswer(index);
+                optionsDiv.appendChild(optionDiv);
+            });
+        }
+
+        function checkAnswer(selectedIndex) {
+            const correctAnswer = questions[currentQuestionIndex].answer;
+            if (selectedIndex === correctAnswer) {
+                score++;
+            }
+            document.getElementById("score").textContent = `Puan: ${score}`;
+            document.getElementById("next-btn").style.display = 'block';
+        }
+
+        document.getElementById("next-btn").onclick = () => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                loadQuestion();
+                document.getElementById("next-btn").style.display = 'none';
+            } else {
+                document.getElementById("question").textContent = "Quiz Tamamlandı!";
+                document.getElementById("options").innerHTML = '';
+                document.getElementById("next-btn").style.display = 'none';
+            }
+        };
+
+        // İlk soruyu yükleyelim
+        loadQuestion();
+    </script>
+</body>
+</html>
+
+       
+         
+
+
+           
+
+

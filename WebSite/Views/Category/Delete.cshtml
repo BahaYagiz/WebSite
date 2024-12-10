@@ -1,0 +1,30 @@
+﻿@{
+    Layout = "_LayoutAdmin";
+}
+@section CardHeader {
+    <span>Kategori Sil</span>
+}
+@model CategoryModel
+@if (TempData["Success"] != null)
+{
+    <script>
+        toastr.success('@TempData["Success"]');
+    </script>
+}
+
+@if (TempData["Error"] != null)
+{
+    <script>
+        toastr.error('@TempData["Error"]');
+    </script>
+}
+
+
+<h4>@Model.Name adlı kategori silinecektir, Onaylıyor musunuz?</h4>
+
+<form method="post" asp-action="Delete">
+    <input type="hidden" asp-for="Id" />
+    <input type="submit" value="Sil" class="btn btn-danger btn-sm" />
+    <a asp-action="Index" class="btn btn-primary btn-sm">Vazgeç</a>
+</form>
+

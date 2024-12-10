@@ -1,0 +1,23 @@
+﻿
+@{
+    ViewData["Title"] = "Logout";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@{
+    Layout = "_Layout";
+}
+
+@section CardHeader {
+    <div class="card-header d-flex align-items-center justify-content-between bg-light">
+        <h5 class="mb-0 text-primary">Çıkış Yap</h5>
+    </div>
+}
+
+<div class="card-body">
+    <h3>Çıkış yapmak üzeresiniz. Devam etmek istiyor musunuz?</h3>
+    <form method="post">
+        <button type="submit" class="btn btn-danger">Evet, Çıkış Yap</button>
+        <a href="@Url.Action("Index", "Home")" class="btn btn-secondary">Hayır, Geri Dön</a>
+    </form>
+</div>
+
