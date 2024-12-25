@@ -1,6 +1,6 @@
-﻿
-@{
+﻿@{
     ViewData["Title"] = "Enjoy";
+
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 <!DOCTYPE html>
@@ -8,50 +8,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Oyunu</title>
+    <title>@ViewData["Title"]</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEJ+K+zDJbA1vA4X2w/4fwz+FWFZyP5P6l5/sXjf8INW9BdM6ZZv26P0fH1U4" crossorigin="anonymous">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
+            background-color: #f8f9fa;
         }
 
         .quiz-container {
             background-color: white;
-            padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 300px;
-        }
+            padding: 30px; /* Padding artırıldı */
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            width: 100%; /* Maksimum genişlik */
+            max-width: 800px; /* Maksimum genişlik sınırlaması */
+            margin: 0 auto; /* Ortalamak için */
 
-        #question {
+        .question {
             font-size: 20px;
             margin-bottom: 20px;
         }
 
-        button {
-            padding: 10px 20px;
-            margin-top: 20px;
-            cursor: pointer;
+        .btn-option {
+            margin: 5px 0;
         }
 
-        #options div {
-            background-color: #f1f1f1;
-            margin: 5px;
-            padding: 10px;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-
-        #options div:hover {
-            background-color: #ddd;
-        }
-
-        #score {
+        #result {
             font-size: 18px;
             margin-top: 20px;
             font-weight: bold;
@@ -59,11 +41,14 @@
     </style>
 </head>
 <body>
-    <div class="quiz-container">
-        <div id="question"></div>
-        <div id="options"></div>
-        <button id="next-btn">Sonraki</button>
-        <div id="score"></div>
+    <div class="container d-flex justify-content-center align-items-center min-vh-100">
+        <div class="quiz-container col-12 col-md-6">
+            <h2 class="text-center mb-4">@ViewData["Title"]</h2>
+            <div id="question" class="question"></div>
+            <div id="options"></div>
+            <div id="result"></div>
+            <button id="next-btn" class="btn btn-primary w-100 mt-4" style="display:none;">Sonraki</button>
+        </div>
     </div>
 
     <script>
@@ -106,97 +91,77 @@
             { text: "Türk lirasının simgesi nedir?", options: ["TL", "₺", "$", "€"], answer: 1 },
             { text: "Hangi spor futbolda kullanılan bir terimdir?", options: ["Gol", "Koşu", "As", "Tur"], answer: 0 },
             { text: "Dünya'nın en derin noktası neresidir?", options: ["Mariana Çukuru", "Everest", "Himalayalar", "Atlas Çukuru"], answer: 0 },
-            { text: "İnsanın en büyük iç organı nedir?", options: ["Mide", "Karaciğer", "Akciğer", "Böbrek"], answer: 1 },
-            { text: "Dünya'nın en büyük çölü hangisidir?", options: ["Sahara", "Gobi", "Atacama", "Antarktika"], answer: 0 },
-            { text: "Kan grubunu kim keşfetti?", options: ["Alexander Fleming", "Karl Landsteiner", "Louis Pasteur", "Joseph Lister"], answer: 1 },
-            { text: "Kütle çekim yasasını kim bulmuştur?", options: ["Albert Einstein", "Isaac Newton", "Galileo Galilei", "Johannes Kepler"], answer: 1 },
-            { text: "Güneş'in yüzeyi hangi elementten oluşur?", options: ["Helyum", "Hidrojen", "Oksijen", "Karbon"], answer: 1 },
-            { text: "Bir gün kaç saattir?", options: ["12", "24", "36", "48"], answer: 1 },
-            { text: "Bir kilogram kaç gramdır?", options: ["10", "100", "1000", "10000"], answer: 2 },
-            { text: "Bir haftada kaç gün vardır?", options: ["5", "6", "7", "8"], answer: 2 },
-            { text: "İstanbul'un Fethi hangi yılda gerçekleşmiştir?", options: ["1453", "1492", "1071", "1923"], answer: 0 },
-            { text: "Türkiye'nin bağımsızlık savaşı hangi antlaşmayla sona ermiştir?", options: ["Lozan", "Sevr", "Mondros", "Versay"], answer: 0 },
-            { text: "Güneş sistemindeki en büyük gezegen hangisidir?", options: ["Dünya", "Jüpiter", "Satürn", "Neptün"], answer: 1 },
-            { text: "Hangi madde oda sıcaklığında sıvıdır?", options: ["Altın", "Cıva", "Bakır", "Demir"], answer: 1 },
-            { text: "Bir yılda kaç ay vardır?", options: ["10", "11", "12", "13"], answer: 2 },
-            { text: "Türkiye'nin ilk başbakanı kimdir?", options: ["İsmet İnönü", "Mustafa Kemal Atatürk", "Adnan Menderes", "Turgut Özal"], answer: 0 },
-            { text: "En büyük yırtıcı kara hayvanı hangisidir?", options: ["Ayı", "Kaplan", "Aslan", "Kurt"], answer: 0 },
-            { text: "Bir futbol takımı sahada kaç oyuncu ile oynar?", options: ["10", "11", "12", "13"], answer: 1 },
-            { text: "Bir litre kaç mililitreye eşittir?", options: ["100", "500", "1000", "2000"], answer: 2 },
-            { text: "Hangi element sembolü 'O' harfidir?", options: ["Oksijen", "Altın", "Bakır", "Azot"], answer: 0 },
-            { text: "Dünya'nın en yüksek dağı hangisidir?", options: ["Everest", "K2", "Kangchenjunga", "Lhotse"], answer: 0 },
-            { text: "Türkiye'nin ilk Cumhurbaşkanı kimdir?", options: ["İsmet İnönü", "Mustafa Kemal Atatürk", "Celal Bayar", "Turgut Özal"], answer: 1 },
-            { text: "Bir asır kaç yıldır?", options: ["10", "50", "100", "1000"], answer: 2 },
-            { text: "En küçük kuş türü hangisidir?", options: ["Serçe", "Kolibri", "Bülbül", "Kırlangıç"], answer: 1 },
-            { text: "Türk alfabesi kaç harften oluşur?", options: ["28", "29", "30", "31"], answer: 1 },
-            { text: "Türkiye'nin en uzun nehri hangisidir?", options: ["Kızılırmak", "Yeşilırmak", "Fırat", "Dicle"], answer: 0 },
-            { text: "Hangi elementin atom numarası 1'dir?", options: ["Helyum", "Hidrojen", "Oksijen", "Azot"], answer: 1 },
-            { text: "Ay'a ilk ayak basan astronot kimdir?", options: ["Buzz Aldrin", "Neil Armstrong", "Yuri Gagarin", "Alan Shepard"], answer: 1 },
-            { text: "Bir yumurtanın pişme süresi ortalama kaç dakikadır?", options: ["3", "5", "7", "10"], answer: 1 },
-            { text: "Hangi renk tüm renklerin birleşiminden oluşur?", options: ["Siyah", "Beyaz", "Kırmızı", "Mavi"], answer: 1 },
-            { text: "Kabe hangi şehirde bulunmaktadır?", options: ["Medine", "Mekke", "Riyad", "Taif"], answer: 1 },
-            { text: "Türkiye hangi yarım kürede yer alır?", options: ["Kuzey", "Güney", "Doğu", "Batı"], answer: 0 },
-            { text: "Bir futbol maçı kaç dakika sürer?", options: ["60", "70", "90", "120"], answer: 2 },
-            { text: "Dünya'nın eksen eğikliği kaç derecedir?", options: ["23.5", "24", "25", "26"], answer: 0 },
-            { text: "Hangi hayvanın dişleri dışarıdadır?", options: ["Fil", "Kaplan", "Kutup Ayısı", "Su Aygırı"], answer: 0 },
-            { text: "Deniz seviyesinden en düşük noktada yer alan deniz hangisidir?", options: ["Kızıldeniz", "Karadeniz", "Lut Gölü", "Ölü Deniz"], answer: 3 },
-            { text: "Bir yıl kaç gün sürer (ortalama)?", options: ["364", "365", "366", "367"], answer: 1 },
-            { text: "DNA'nın açılımı nedir?", options: ["Deoxyribonucleic Acid", "Deoxyribonucleic Base", "Ribonucleic Acid", "Deoxyribonucleic Chain"], answer: 0 },
-            { text: "Şimşek oluşumu sırasında hangi gaz açığa çıkar?", options: ["Hidrojen", "Oksijen", "Ozon", "Azot"], answer: 2 },
-            { text: "Türkiye'nin en batısında yer alan il hangisidir?", options: ["Edirne", "Çanakkale", "Kırklareli", "Tekirdağ"], answer: 0 },
-            { text: "Osmanlı İmparatorluğu'nun son padişahı kimdir?", options: ["Abdülmecid", "Mehmed V", "Mehmed VI", "Abdülhamid II"], answer: 2 },
-            { text: "Gün doğumunun diğer adı nedir?", options: ["Gurup", "Şafak", "Alacakaranlık", "Tan"], answer: 3 },
-            { text: "Bir bardakta yaklaşık kaç mililitre su vardır?", options: ["100", "200", "300", "400"], answer: 1 }
+            { text: "İnsanın en büyük organı nedir?", options: ["Beyin", "Cilt", "Kalp", "Karaciğer"], answer: 1 },
+            { text: "Karakış hangi mevsimde başlar?", options: ["Kış", "Sonbahar", "Yaz", "İlkbahar"], answer: 0 }
         ];
 
         let currentQuestionIndex = 0;
-        let score = 0;
+        let shuffledQuestions = shuffleArray(questions);
+
+        function shuffleArray(array) {
+            let shuffledArray = array.slice();
+            for (let i = shuffledArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]];
+            }
+            return shuffledArray;
+        }
 
         function loadQuestion() {
-            const currentQuestion = questions[currentQuestionIndex];
-            document.getElementById("question").textContent = currentQuestion.text;
+            const question = shuffledQuestions[currentQuestionIndex];
+            document.getElementById("question").textContent = question.text;
             const optionsDiv = document.getElementById("options");
-            optionsDiv.innerHTML = '';
-
-            currentQuestion.options.forEach((option, index) => {
-                const optionDiv = document.createElement("div");
-                optionDiv.textContent = option;
-                optionDiv.onclick = () => checkAnswer(index);
-                optionsDiv.appendChild(optionDiv);
+            optionsDiv.innerHTML = "";
+            question.options.forEach((option, index) => {
+                const button = document.createElement("button");
+                button.textContent = option;
+                button.classList.add("btn", "btn-outline-primary", "btn-option", "w-100", "mb-2");
+                button.onclick = () => checkAnswer(index);
+                optionsDiv.appendChild(button);
             });
+            document.getElementById("next-btn").style.display = "none";
         }
 
         function checkAnswer(selectedIndex) {
-            const correctAnswer = questions[currentQuestionIndex].answer;
+            const correctAnswer = shuffledQuestions[currentQuestionIndex].answer;
+            const resultDiv = document.getElementById("result");
+
             if (selectedIndex === correctAnswer) {
-                score++;
+                resultDiv.textContent = "Doğru!";
+                resultDiv.classList.add("text-success");
+                resultDiv.classList.remove("text-danger");
+            } else {
+                resultDiv.textContent = "Yanlış!";
+                resultDiv.classList.add("text-danger");
+                resultDiv.classList.remove("text-success");
             }
-            document.getElementById("score").textContent = `Puan: ${score}`;
+
+            // Yanlış cevaplarda, doğru cevabı da yeşil renkte gösterelim
+            const optionButtons = document.querySelectorAll('.btn-option');
+            optionButtons.forEach((button, index) => {
+                if (index === correctAnswer) {
+                    button.classList.add('btn-success');  // Doğru cevap yeşil olacak
+                } else if (index === selectedIndex) {
+                    button.classList.add('btn-danger');  // Yanlış cevap kırmızı olacak
+                }
+            });
+
             document.getElementById("next-btn").style.display = 'block';
         }
 
-        document.getElementById("next-btn").onclick = () => {
+        document.getElementById("next-btn").addEventListener("click", function () {
             currentQuestionIndex++;
-            if (currentQuestionIndex < questions.length) {
+            if (currentQuestionIndex < shuffledQuestions.length) {
                 loadQuestion();
-                document.getElementById("next-btn").style.display = 'none';
             } else {
-                document.getElementById("question").textContent = "Quiz Tamamlandı!";
-                document.getElementById("options").innerHTML = '';
-                document.getElementById("next-btn").style.display = 'none';
+                document.getElementById("result").textContent = "Quiz tamamlandı!";
+                document.getElementById("next-btn").style.display = "none";
             }
-        };
+        });
 
-        // İlk soruyu yükleyelim
         loadQuestion();
     </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-KyZXEJ+K+zDJbA1vA4X2w/4fwz+FWFZyP5P6l5/sXjf8INW9BdM6ZZv26P0fH1U4" crossorigin="anonymous"></script>
 </body>
 </html>
-
-       
-         
-
-
-           
-
-

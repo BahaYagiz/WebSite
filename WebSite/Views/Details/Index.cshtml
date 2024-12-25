@@ -9,10 +9,11 @@
         display: flex;
         justify-content: center; /* Fotoğrafı yatayda ortalar */
         align-items: center; /* Fotoğrafı dikeyde ortalar */
-        height: 750px; /* Yüksekliği sınırlayarak kare yap */
-        width: 750px; /* Genişliği sınırlayarak kare yap */
+        height: 400px; /* Fotoğraf yüksekliği */
+        width: 400px; /* Fotoğraf genişliği */
         overflow: hidden; /* Fotoğraf taşarsa gizle */
         margin: 0 auto; /* Sayfada ortalamak için */
+        border-radius: 8px; /* Hafif yuvarlak köşeler */
     }
 
         .report-image img {
@@ -20,6 +21,31 @@
             height: 100%; /* Yüksekliği kapsayıcıya göre ayarla */
             object-fit: cover; /* Fotoğrafın oranını koruyarak, kapsayıcıya sığacak şekilde kırpma yap */
         }
+
+    .report-detail h1 {
+        font-size: 36px; /* Başlık fontunu büyüt */
+        font-weight: bold; /* Başlık kalın olsun */
+        text-align: center; /* Başlık ortalanmış */
+    }
+
+    .report-content p {
+        font-size: 18px; /* İçerik yazısını büyüt */
+        line-height: 1.6; /* Satır aralığını aç */
+        margin-top: 20px; /* İçeriğe biraz boşluk bırak */
+    }
+
+    .author-info p {
+        font-size: 16px; /* Yazar ismi yazısını büyüt */
+        font-style: italic; /* Yazar ismini italik yap */
+        text-align: center; /* Yazar ismini ortala */
+        margin-top: 20px; /* Yazar bilgisinin üstüne boşluk ekle */
+    }
+
+    footer {
+        text-align: center;
+        font-size: 14px; /* Altbilgi yazısını küçült */
+        margin-top: 40px; /* Altbilgiye boşluk ekle */
+    }
 </style>
 
 <div class="report-detail">
@@ -44,8 +70,3 @@
         <p><strong>Yazar:</strong> @Model.AuthorName</p>
     </div>
 
-    <!-- Altbilgi (Footer) -->
-    <footer>
-        <p>&copy; 2024 - WebSite</p>
-    </footer>
-</div>

@@ -1,16 +1,13 @@
-﻿using Microsoft.EntityFrameworkCore;
-using WebSite.Models;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace WebSite.Models
 {
-    public class AppDbContext : DbContext
+    public class AppDbContext : IdentityDbContext<AppUser, AppRole, string>
     {
-
         public DbSet<Report> Reports { get; set; }
         public DbSet<Category> Categories { get; set; }
-
-        public DbSet<Role> Roles { get; set; }
-        public DbSet<User> Users { get; set; }
+        public DbSet<Todo> Todos { get; set; }
 
 
 
@@ -19,9 +16,9 @@ namespace WebSite.Models
         {
         }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Seed();
-        }
+        //protected override void OnModelCreating(ModelBuilder modelBuilder)
+        //{
+        //    modelBuilder.Seed();
+        //}
     }
 }

@@ -1,16 +1,14 @@
-﻿@model List<UserModel>
-
+﻿
 @{
     ViewData["Title"] = "Index";
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
-
+@model List<UserModel>
 @section CardHeader {
     <span>Üyeler</span>
 }
 
 <a asp-action="Add" asp-controller="User" class="btn btn-primary btn-sm mb-2">Ekle</a>
-
 <table class="table">
     <thead>
         <tr>
@@ -29,20 +27,15 @@
                 <td>@item.UserName</td>
                 <td>@item.Email</td>
                 <td>
-                    @if (!string.IsNullOrEmpty(item.RoleName))
-                    {
-                        <span class="badge bg-white text-dark">@item.RoleName</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-warning text-white">Rol Belirtilmemiş</span>
-                    }
+                    <a asp-action="UserRole" asp-route-id="@item.Id" class="btn btn-primary btn-sm">Yetkiler</a>
                 </td>
                 <td>
                     <a asp-action="Update" asp-route-id="@item.Id" class="btn btn-primary btn-sm">Düzenle</a>
                     <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm">Sil</a>
+
                 </td>
             </tr>
         }
+
     </tbody>
 </table>

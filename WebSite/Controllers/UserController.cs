@@ -1,112 +1,112 @@
 ﻿using AspNetCoreHero.ToastNotification.Abstractions;
-using Microsoft.AspNetCore.Authorization;
+using AspNetCoreHero.ToastNotification.Notyf.Models;
 using AutoMapper;
+using WebSite.Repositories;
+using WebSite.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using NETCore.Encrypt.Extensions;
 using System.Collections.Specialized;
 using WebSite.Models;
-using WebSite.Repositories;
-using WebSite.ViewModels;
 
 namespace WebSite.Controllers
 {
-    [Authorize(Roles = "Admin")]
+   
     public class UserController : Controller
     {
-        private readonly UserRepository _userRepository;
+
         private readonly IMapper _mapper;
         private readonly IConfiguration _config;
         private readonly INotyfService _notyf;
         private readonly IFileProvider _fileProvider;
-
-        public UserController(UserRepository userRepository, IMapper mapper, IConfiguration config, INotyfService notyf, IFileProvider fileProvider)
+        private readonly UserManager<AppUser> _userManager;
+        private readonly RoleManager<AppRole> _roleManager;
+        public UserController(IMapper mapper, IConfiguration config, INotyfService notyf, IFileProvider fileProvider, UserManager<AppUser> userManager, RoleManager<AppRole> roleManager)
         {
-            _userRepository = userRepository;
+
             _mapper = mapper;
             _config = config;
             _notyf = notyf;
             _fileProvider = fileProvider;
+            _userManager = userManager;
+            _roleManager = roleManager;
         }
 
         public async Task<IActionResult> Index()
         {
-            var users = await _userRepository.GetAllAsync();
+            var users = await _userManager.Users.ToListAsync();
             var userModels = _mapper.Map<List<UserModel>>(users);
             return View(userModels);
         }
 
-        public async Task<IActionResult> Add()
+        public IActionResult Add()
         {
-            // Role modelini doğrudan Role modelinden çekiyoruz
-            var roles = await _userRepository.GetAllAsync(); // GetRolesAsync yerine GetAllAsync kullanıyoruz
-            ViewBag.Roles = roles; 
             return View();
         }
 
         [HttpPost]
         public async Task<IActionResult> Add(UserModel model)
         {
-            if (_userRepository.Where(s => s.UserName == model.UserName).Count() > 0)
+
+            var user = new AppUser();
+            user.FullName = model.FullName;
+            user.UserName = model.UserName;
+            user.Email = model.Email;
+            user.PhotoUrl = "default-avatar.png";
+            var identityResult = await _userManager.CreateAsync(user, model.Password);
+
+            if (!identityResult.Succeeded)
             {
-                _notyf.Error("Girilen Kullanıcı Adı Kayıtlıdır!");
+                foreach (var item in identityResult.Errors)
+                {
+                    ModelState.AddModelError("", item.Description);
+
+
+                    _notyf.Error(item.Description);
+                }
+
                 return View(model);
             }
-            if (_userRepository.Where(s => s.Email == model.Email).Count() > 0)
+            // default olarak Uye rolü ekleme
+            var user1 = await _userManager.FindByNameAsync(model.UserName);
+            var roleExist = await _roleManager.RoleExistsAsync("Uye");
+            if (!roleExist)
             {
-                _notyf.Error("Girilen E-Posta Adresi Kayıtlıdır!");
-                return View(model);
+                var role = new AppRole { Name = "Uye" };
+                await _roleManager.CreateAsync(role);
             }
 
-            var user = new User
-            {
-                FullName = model.FullName,
-                UserName = model.UserName,
-                Email = model.Email,
-                Created = DateTime.Now,
-                Updated = DateTime.Now,
-                PhotoUrl = "/admin-tema/assest/img/default-avatar.png",
-                Password = MD5Hash(model.Password),
-                RoleName = model.RoleName // Role modelini burada kullanıyoruz
-            };
-
-            await _userRepository.AddAsync(user);
+            await _userManager.AddToRoleAsync(user1, "Uye");
             _notyf.Success("Üye Eklendi");
 
             return RedirectToAction("Index");
         }
-
-        public async Task<IActionResult> Update(int id)
+        public async Task<IActionResult> Update(string id)
         {
-            var user = await _userRepository.GetByIdAsync(id);
+            var user = await _userManager.FindByIdAsync(id);
             var userModel = _mapper.Map<UserModel>(user);
-
-            // Role modelini doğrudan Role modelinden çekiyoruz
-            var roles = await _userRepository.GetAllAsync(); // GetRolesAsync yerine GetAllAsync kullanıyoruz
-            ViewBag.Roles = roles;
-
             return View(userModel);
         }
 
         [HttpPost]
         public async Task<IActionResult> Update(UserModel model)
         {
-            var user = await _userRepository.GetByIdAsync(model.Id);
+            var user = await _userManager.FindByIdAsync(model.Id);
             user.FullName = model.FullName;
             user.UserName = model.UserName;
             user.Email = model.Email;
-            user.RoleName = model.RoleName; 
-            user.Updated = DateTime.Now;
 
-            await _userRepository.UpdateAsync(user);
+            await _userManager.UpdateAsync(user);
             _notyf.Success("Üye Güncellendi");
             return RedirectToAction("Index");
         }
 
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(string id)
         {
-            var user = await _userRepository.GetByIdAsync(id);
+            var user = await _userManager.FindByIdAsync(id);
             var userModel = _mapper.Map<UserModel>(user);
             return View(userModel);
         }
@@ -114,64 +114,97 @@ namespace WebSite.Controllers
         [HttpPost]
         public async Task<IActionResult> Delete(UserModel model)
         {
-            var user = await _userRepository.GetByIdAsync(model.Id);
+            var user = await _userManager.FindByIdAsync(model.Id);
 
-            if (user.RoleName == "Admin")
+            if (await _userManager.IsInRoleAsync(user, "Admin"))
             {
                 _notyf.Error("Yönetici Üye Silinemez!");
                 return RedirectToAction("Index");
             }
-            await _userRepository.DeleteAsync(model.Id);
+            await _userManager.DeleteAsync(user);
             _notyf.Success("Üye Silindi");
             return RedirectToAction("Index");
         }
 
         public async Task<IActionResult> Profile()
         {
-            var userName = User.Claims.First(c => c.Type == "UserName").Value;
-            var user = await _userRepository.Where(s => s.UserName == userName).FirstOrDefaultAsync();
+            var userName = User.Identity.Name;
+            var user = await _userManager.Users.Where(s => s.UserName == userName).FirstOrDefaultAsync();
             var userModel = _mapper.Map<RegisterModel>(user);
             return View(userModel);
         }
-
         [HttpPost]
         public async Task<IActionResult> Profile(RegisterModel model)
         {
-            var userName = User.Claims.First(c => c.Type == "UserName").Value;
-            var user = await _userRepository.Where(s => s.UserName == userName).FirstOrDefaultAsync();
+            var userName = User.Identity.Name;
+            var user = await _userManager.Users.Where(s => s.UserName == userName).FirstOrDefaultAsync();
 
             if (model.Password != model.PasswordConfirm)
             {
                 _notyf.Error("Parola Tekrarı Tutarsız!");
-                return View(model);
+                return RedirectToAction("Profile");
             }
 
             user.FullName = model.FullName;
             user.UserName = model.UserName;
             user.Email = model.Email;
 
-            if (!string.IsNullOrEmpty(model.Password))
+
+            var rootFolder = _fileProvider.GetDirectoryContents("wwwroot");
+            var photoUrl = "default-avatar.png";
+            if (model.PhotoFile != null)
             {
-                user.Password = MD5Hash(model.Password); 
+                var filename = Guid.NewGuid().ToString() + Path.GetExtension(model.PhotoFile.FileName);
+                var photoPath = Path.Combine(rootFolder.First(x => x.Name == "userPhotos").PhysicalPath, filename);
+                using var stream = new FileStream(photoPath, FileMode.Create);
+                model.PhotoFile.CopyTo(stream);
+                photoUrl = filename;
+
             }
 
-            user.Updated = DateTime.Now;
+            user.PhotoUrl = photoUrl;
 
-            await _userRepository.UpdateAsync(user);
-            _notyf.Success("Profil Güncellendi");
-            return RedirectToAction("Profile");
+
+            await _userManager.UpdateAsync(user);
+            _notyf.Success("Kullanıcı Bilgileri Güncellendi");
+
+            return RedirectToAction("Index", "Admin");
+
         }
 
-        private string MD5Hash(string input)
+        public async Task<IActionResult> UserRole(string id)
         {
-            var md5 = System.Security.Cryptography.MD5.Create();
-            var hashBytes = md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(input));
-            var sb = new System.Text.StringBuilder();
-            foreach (var b in hashBytes)
+            var roles = await _roleManager.Roles.ToListAsync();
+            var user = await _userManager.FindByIdAsync(id);
+            var userRoleModels = new List<UserRoleModel>();
+            foreach (var role in roles)
             {
-                sb.Append(b.ToString("x2"));
+                var userRoleModel = new UserRoleModel();
+                userRoleModel.UserId = id;
+                userRoleModel.RoleId = role.Id;
+                userRoleModel.RoleName = role.Name;
+                userRoleModel.IsInRole = await _userManager.IsInRoleAsync(user, role.Name);
+                userRoleModels.Add(userRoleModel);
             }
-            return sb.ToString();
+
+            return View(userRoleModels);
+        }
+
+        public async Task<IActionResult> UserRoleAdd(string id, string userId)
+        {
+            var role = await _roleManager.FindByIdAsync(id);
+            var user = await _userManager.FindByIdAsync(userId);
+            await _userManager.AddToRoleAsync(user, role.Name);
+
+            return RedirectToAction("UserRole", new { id = userId });
+        }
+        public async Task<IActionResult> UserRoleDelete(string id, string userId)
+        {
+            var role = await _roleManager.FindByIdAsync(id);
+            var user = await _userManager.FindByIdAsync(userId);
+            await _userManager.RemoveFromRoleAsync(user, role.Name);
+
+            return RedirectToAction("UserRole", new { id = userId });
         }
     }
 }

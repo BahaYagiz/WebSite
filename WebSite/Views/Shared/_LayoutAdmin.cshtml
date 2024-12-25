@@ -61,7 +61,7 @@
                         </a>
                     </li>
                     <li class="nav-item active">
-                        <a class="nav-link" asp-controller="Role" asp-action="Index">
+                        <a class="nav-link" asp-controller="User" asp-action="UserRole">
                             <i class="fas fa-fw fa-list"></i>
                             <p>Rol işlemleri</p>
                         </a>
@@ -96,19 +96,25 @@
                         <ul class="navbar-nav ml-auto">
                             <li>
                                 <div style="margin-top: 25px;">
-                                    @if (User.IsInRole("Admin"))
-                                    {
-                                        <span class="badge bg-success text-white mr-2">Yönetici Üye</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-info text-white mr-2">Normal Üye</span>
-                                    }
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <span class="badge bg-success text-white mr-2">Yönetici Üye</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-info text-white mr-2">Normal Üye</span>
+                                }
+
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">
+                                    @User.Identity.Name
+                                </span>
                                 </div>
                             </li>
                             <li>
-                                <div style="margin-top: 25px;">
-                                    <img src="~/admin-tema/assets/img/default-avatar.png" alt="Avatar" class="rounded-circle" style="width: 30px; height: 30px;">
+                                <div style="margin-top: 15px;">
+                                    <img class="img-profile rounded-circle"
+                                         src="~/userPhotos/@User.Claims.First(c=>c.Type=="PhotoUrl").Value"
+                                         style="width: 50px; height: 50px;">
                                 </div>
                             </li>
                             <li class="nav-item dropdown">
@@ -146,23 +152,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Toastr Notification Kodları -->
-    @if (TempData["Success"] != null)
-    {
-        <script>
-            toastr.success('@TempData["Success"]');
-        </script>
-    }
-
-    @if (TempData["Error"] != null)
-    {
-        <script>
-            toastr.error('@TempData["Error"]');
-        </script>
-    }
-
-    <!-- Diğer Scriptler -->
     <script src="~/admin-tema/assets/js/core/jquery.3.2.1.min.js" type="text/javascript"></script>
     <script src="~/admin-tema/assets/js/core/popper.min.js" type="text/javascript"></script>
     <script src="~/admin-tema/assets/js/core/bootstrap.min.js" type="text/javascript"></script>
@@ -171,30 +160,7 @@
     <script src="~/admin-tema/assets/js/light-bootstrap-dashboard.js?v=2.0.0" type="text/javascript"></script>
     <script src="~/admin-tema/assets/js/demo.js"></script>
 
-    <!-- Toastr JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
 
-    <script>
-        // Toastr Konfigürasyonu
-        toastr.options = {
-            "closeButton": true,        // Kapatma butonu
-            "debug": false,
-            "newestOnTop": true,        // En yeni bildirim üstte
-            "progressBar": true,        // İlerleme çubuğu
-            "positionClass": "toast-top-right",  // Bildirimin konumu
-            "preventDuplicates": true,  // Aynı mesajın birden fazla gösterilmesi engellenir
-            "showDuration": "300",      // Gösterim süresi
-            "hideDuration": "1000",     // Kapanma süresi
-            "timeOut": "5000",          // Görüntülenme süresi
-            "extendedTimeOut": "1000",  // Uzun süre gösterim
-            "showEasing": "swing",      // Gösterim animasyonu
-            "hideEasing": "linear",     // Kapanma animasyonu
-            "showMethod": "fadeIn",     // Görüntüleme yöntemi
-            "hideMethod": "fadeOut"     // Kapanma yöntemi
-        };
-    </script>
-
-    <!-- Rendered Scripts -->
     @RenderSection("Scripts", required: false)
     @await Component.InvokeAsync("Notyf")
 </body>

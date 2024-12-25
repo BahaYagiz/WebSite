@@ -10,9 +10,9 @@ namespace WebSite.Mapping
         {
             CreateMap<Report, ReportModel>().ReverseMap();
             CreateMap<Category, CategoryModel>().ReverseMap();
-            CreateMap<User, UserModel>().ReverseMap();
-            CreateMap<User, RegisterModel>().ReverseMap();
-            CreateMap<Role, RoleModel>().ReverseMap(); 
+            CreateMap<AppUser, UserModel>().ReverseMap();
+            CreateMap<AppUser, RegisterModel>().ReverseMap();
+            CreateMap<Todo, TodoModel>().ReverseMap();
         }
     }
 }

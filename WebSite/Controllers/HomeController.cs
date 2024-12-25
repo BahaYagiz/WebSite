@@ -1,16 +1,17 @@
-﻿using AutoMapper;
-using WebSite.ViewModels;
-using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
-using WebSite.Models;
+﻿using AspNetCoreHero.ToastNotification.Notyf.Models;
+using AutoMapper;
 using WebSite.Repositories;
-using AspNetCoreHero.ToastNotification.Notyf.Models;
+using WebSite.ViewModels;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
 using NETCore.Encrypt.Extensions;
+using System.Diagnostics;
 using System.Security.Claims;
 using AspNetCoreHero.ToastNotification.Abstractions;
+using Microsoft.AspNetCore.Identity;
+using WebSite.Models;
 
 namespace WebSite.Controllers
 {
@@ -18,23 +19,26 @@ namespace WebSite.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly ReportRepository _reportRepository;
-        private readonly UserRepository _userRepository;
+
         private readonly IMapper _mapper;
         private readonly IConfiguration _config;
         private readonly INotyfService _notyf;
         private readonly IFileProvider _fileProvider;
-        private readonly CategoryRepository _categoryRepository;
+        private readonly UserManager<AppUser> _userManager;
+        private readonly RoleManager<AppRole> _roleManager;
+        private readonly SignInManager<AppUser> _signInManager;
 
-        public HomeController(ILogger<HomeController> logger, ReportRepository reportRepository, IMapper mapper, UserRepository userRepository, IConfiguration config, INotyfService notyf, IFileProvider fileProvider, CategoryRepository categoryRepository)
+        public HomeController(ILogger<HomeController> logger, ReportRepository reportRepository, IMapper mapper, IConfiguration config, INotyfService notyf, IFileProvider fileProvider, UserManager<AppUser> userManager, RoleManager<AppRole> roleManager, SignInManager<AppUser> signInManager)
         {
             _logger = logger;
             _reportRepository = reportRepository;
             _mapper = mapper;
-            _userRepository = userRepository;
             _config = config;
             _notyf = notyf;
             _fileProvider = fileProvider;
-            _categoryRepository = categoryRepository;
+            _userManager = userManager;
+            _roleManager = roleManager;
+            _signInManager = signInManager;
         }
 
 
@@ -113,124 +117,88 @@ namespace WebSite.Controllers
         {
             return View();
         }
-
         public IActionResult Login()
         {
             return View();
         }
 
         [HttpPost]
-        public IActionResult Login(LoginModel model)
+        public async Task<IActionResult> Login(LoginModel model)
         {
-            // MD5 ile şifreyi hash'le
-            var hashedpass = MD5Hash(model.Password);
-
-            // Kullanıcıyı veritabanında bul
-            var user = _userRepository.Where(s => s.UserName == model.UserName && s.Password == hashedpass).SingleOrDefault();
-
+            var user = await _userManager.FindByNameAsync(model.UserName);
             if (user == null)
             {
-                // Kullanıcı adı veya parola yanlışsa hata mesajı göster
-                _notyf.Error("Kullanıcı Adı veya Parola Geçersizdir!");
-                return View();
+                _notyf.Error("Girilen Kullanıcı Adı Kayıtlı Değildir!");
+                return View(model);
             }
+            var signInResult = await _signInManager.PasswordSignInAsync(user, model.Password, model.KeepMe, true);
 
-            // Kullanıcı başarıyla giriş yaparsa başarılı bildirim göster
-            _notyf.Success("Başarıyla giriş yaptınız!");
-
-            // Kullanıcı bilgilerini Claim olarak ayarla
-            List<Claim> claims = new List<Claim>()
+            if (signInResult.Succeeded)
             {
-                new Claim(ClaimTypes.Name, user.FullName),
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Role, user.RoleName),
-                new Claim("UserName", user.UserName),
-                new Claim("PhotoUrl", user.PhotoUrl),
-                new Claim("Email", user.Email),
-            };
 
-            // Kimlik bilgileri oluştur
-            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var principal = new ClaimsPrincipal(identity);
-
-            // Giriş özelliklerini ayarla
-            var properties = new AuthenticationProperties()
+                await _userManager.AddClaimAsync(user, new Claim("PhotoUrl", user.PhotoUrl));
+                return RedirectToAction("Index", "Admin");
+            }
+            if (signInResult.IsLockedOut)
             {
-                AllowRefresh = true,
-                IsPersistent = model.KeepMe
-            };
+                _notyf.Error("Kullanıcı Girişi " + user.LockoutEnd + " kadar kısıtlanmıştır!");
 
-            // Oturum aç
-            HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, properties);
-
-            // Admin sayfasına yönlendir
-            return RedirectToAction("Index", "Admin");
+                return View(model);
+            }
+            _notyf.Error("Geçersiz Kullanıcı Adı veya Parola Başarısız Giriş Sayısı :" + await _userManager.GetAccessFailedCountAsync(user) + "/3");
+            return View();
         }
+
 
         [HttpPost]
         public async Task<IActionResult> Register(RegisterModel model)
         {
-            if (_userRepository.Where(s => s.UserName == model.UserName).Count() > 0)
+            var identityResult = await _userManager.CreateAsync(new() { UserName = model.UserName, Email = model.Email, FullName = model.FullName, PhotoUrl = "default-avatar.png" }, model.Password);
+
+            if (!identityResult.Succeeded)
             {
-                _notyf.Error("Girilen Kullanıcı Adı Kayıtlıdır!");
-                return View(model);
-            }
-            if (_userRepository.Where(s => s.Email == model.Email).Count() > 0)
-            {
-                _notyf.Error("Girilen E-Posta Adresi Kayıtlıdır!");
+                foreach (var item in identityResult.Errors)
+                {
+                    ModelState.AddModelError("", item.Description);
+
+
+                    _notyf.Error(item.Description);
+                }
+
                 return View(model);
             }
 
-            var rootFolder = _fileProvider.GetDirectoryContents("wwwroot");
-            var photoUrl = "admin-tema/assest/img/default-avatar.png";
-            if (model.PhotoFile != null)
+            // default olarak Uye rolü ekleme
+            var user = await _userManager.FindByNameAsync(model.UserName);
+            var roleExist = await _roleManager.RoleExistsAsync("Uye");
+            if (!roleExist)
             {
-                var filename = Guid.NewGuid().ToString() + Path.GetExtension(model.PhotoFile.FileName);
-                var photoPath = Path.Combine(rootFolder.First(x => x.Name == "userPhotos").PhysicalPath, filename);
-                using var stream = new FileStream(photoPath, FileMode.Create);
-                model.PhotoFile.CopyTo(stream);
-                photoUrl = filename;
+                var role = new AppRole { Name = "Uye" };
+                await _roleManager.CreateAsync(role);
             }
 
-            var hashedpass = MD5Hash(model.Password);
-            var user = new User();
-            user.FullName = model.FullName;
-            user.UserName = model.UserName;
-            user.Password = hashedpass;
-            user.Email = model.Email;
-            user.PhotoUrl = photoUrl;
-            user.RoleName = "Uye";
-            await _userRepository.AddAsync(user);
+            await _userManager.AddToRoleAsync(user, "Uye");
 
             _notyf.Success("Üye Kaydı Yapılmıştır. Oturum Açınız");
-
             return RedirectToAction("Login");
         }
 
-        public IActionResult Logout()
+
+        public async Task<IActionResult> Logout()
         {
-            HttpContext.SignOutAsync();
+            await _signInManager.SignOutAsync();
             return RedirectToAction("Login");
         }
-
         public IActionResult AccessDenied()
         {
             return View();
         }
-
         public IActionResult Privacy()
         {
             return View();
         }
 
-        // Şifreyi MD5 ile hash'le
-        public string MD5Hash(string pass)
-        {
-            var salt = _config.GetValue<string>("AppSettings:MD5Salt");
-            var password = pass + salt;
-            var hashed = password.MD5();
-            return hashed;
-        }
+
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()

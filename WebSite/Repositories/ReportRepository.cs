@@ -31,6 +31,7 @@ namespace WebSite.Repositories
 
             // Report'u güncelle
             _dbSet.Update(report);
+
             await _context.SaveChangesAsync();
         }
     }

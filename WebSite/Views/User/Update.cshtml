@@ -1,5 +1,6 @@
-﻿@{
-    ViewData["Title"] = "Add";
+﻿
+@{
+    ViewData["Title"] = "Update";
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
 
@@ -30,16 +31,7 @@
                 <span class="text-danger" asp-validation-for="Email"></span>
             </div>
 
-            <div class="mb-3">
-                <label asp-for="RoleName"></label>
-                <select asp-for="RoleName" class="form-control">
 
-                    <option value="Uye"> Üye</option>
-                    <option value="Yazar">Yazar</option>
-                    <option value="Admin">Admin</option>
-                </select>
-                <span class="text-danger" asp-validation-for="RoleName"></span>
-            </div>
             <div class="mb-3">
                 <input type="submit" value="Kaydet" class="btn btn-sm btn-primary" />
             </div>
@@ -49,3 +41,4 @@
 
     </div>
 </div>
+

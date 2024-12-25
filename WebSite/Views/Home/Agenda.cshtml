@@ -21,7 +21,7 @@
                             <p class="text-muted">Yazar: @item.AuthorName</p>
                         </div>
                         <div class="card-footer text-center">
-                            <a href="@Url.Action("Details", "Report", new { id = item.Id })" class="btn btn-primary">Daha Fazla</a>
+                            <a asp-controller="Details" asp-action="Index" asp-route-id="@item.Id" class="btn btn-primary">Daha Fazla</a>
                         </div>
                     </div>
                 </div>
