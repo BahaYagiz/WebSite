@@ -19,7 +19,6 @@ namespace WebSite.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly ReportRepository _reportRepository;
-
         private readonly IMapper _mapper;
         private readonly IConfiguration _config;
         private readonly INotyfService _notyf;
@@ -28,7 +27,16 @@ namespace WebSite.Controllers
         private readonly RoleManager<AppRole> _roleManager;
         private readonly SignInManager<AppUser> _signInManager;
 
-        public HomeController(ILogger<HomeController> logger, ReportRepository reportRepository, IMapper mapper, IConfiguration config, INotyfService notyf, IFileProvider fileProvider, UserManager<AppUser> userManager, RoleManager<AppRole> roleManager, SignInManager<AppUser> signInManager)
+        public HomeController(
+            ILogger<HomeController> logger,
+            ReportRepository reportRepository,
+            IMapper mapper,
+            IConfiguration config,
+            INotyfService notyf,
+            IFileProvider fileProvider,
+            UserManager<AppUser> userManager,
+            RoleManager<AppRole> roleManager,
+            SignInManager<AppUser> signInManager)
         {
             _logger = logger;
             _reportRepository = reportRepository;
@@ -41,11 +49,10 @@ namespace WebSite.Controllers
             _signInManager = signInManager;
         }
 
-
         public async Task<IActionResult> Index()
         {
             var reports = await _reportRepository.GetAllAsync();
-            reports = reports.Where(s => s.IsActive == true).ToList();
+            reports = reports.Where(s => s.IsActive).ToList();
             var reportModels = _mapper.Map<List<ReportModel>>(reports);
             return View(reportModels);
         }
@@ -53,7 +60,7 @@ namespace WebSite.Controllers
         public async Task<IActionResult> Turkey()
         {
             var reports = await _reportRepository.GetAllAsync();
-            reports = reports.Where(s => s.CategoryId == 1 && s.IsActive == true).ToList();  // "Turkey" kategoriye göre filtrelendi
+            reports = reports.Where(s => s.CategoryId == 1 && s.IsActive).ToList();
             var reportModels = _mapper.Map<List<ReportModel>>(reports);
             return View(reportModels);
         }
@@ -66,7 +73,7 @@ namespace WebSite.Controllers
         public async Task<IActionResult> Economy()
         {
             var reports = await _reportRepository.GetAllAsync();
-            reports = reports.Where(s => s.CategoryId == 5 && s.IsActive == true).ToList();  // "Economy" kategoriye göre filtrelendi
+            reports = reports.Where(s => s.CategoryId == 5 && s.IsActive).ToList();
             var reportModels = _mapper.Map<List<ReportModel>>(reports);
             return View(reportModels);
         }
@@ -74,7 +81,7 @@ namespace WebSite.Controllers
         public async Task<IActionResult> Politics()
         {
             var reports = await _reportRepository.GetAllAsync();
-            reports = reports.Where(s => s.CategoryId == 7 && s.IsActive == true).ToList();  // "Politics" kategoriye göre filtrelendi
+            reports = reports.Where(s => s.CategoryId == 7 && s.IsActive).ToList();
             var reportModels = _mapper.Map<List<ReportModel>>(reports);
             return View(reportModels);
         }
@@ -82,7 +89,7 @@ namespace WebSite.Controllers
         public async Task<IActionResult> World()
         {
             var reports = await _reportRepository.GetAllAsync();
-            reports = reports.Where(s => s.CategoryId == 3 && s.IsActive == true).ToList();  // "World" kategoriye göre filtrelendi
+            reports = reports.Where(s => s.CategoryId == 3 && s.IsActive).ToList();
             var reportModels = _mapper.Map<List<ReportModel>>(reports);
             return View(reportModels);
         }
@@ -90,7 +97,7 @@ namespace WebSite.Controllers
         public async Task<IActionResult> Sports()
         {
             var reports = await _reportRepository.GetAllAsync();
-            reports = reports.Where(s => s.CategoryId == 4 && s.IsActive == true).ToList();  // "Sports" kategoriye göre filtrelendi
+            reports = reports.Where(s => s.CategoryId == 4 && s.IsActive).ToList();
             var reportModels = _mapper.Map<List<ReportModel>>(reports);
             return View(reportModels);
         }
@@ -98,7 +105,7 @@ namespace WebSite.Controllers
         public async Task<IActionResult> Agenda()
         {
             var reports = await _reportRepository.GetAllAsync();
-            reports = reports.Where(s => s.CategoryId == 2 && s.IsActive == true).ToList();  // "Agenda" kategoriye göre filtrelendi
+            reports = reports.Where(s => s.CategoryId == 2 && s.IsActive).ToList();
             var reportModels = _mapper.Map<List<ReportModel>>(reports);
             return View(reportModels);
         }
@@ -106,17 +113,16 @@ namespace WebSite.Controllers
         public async Task<IActionResult> Health()
         {
             var reports = await _reportRepository.GetAllAsync();
-            reports = reports.Where(s => s.CategoryId == 6 && s.IsActive == true).ToList();  // "Health" kategoriye göre filtrelendi
+            reports = reports.Where(s => s.CategoryId == 6 && s.IsActive).ToList();
             var reportModels = _mapper.Map<List<ReportModel>>(reports);
             return View(reportModels);
         }
-
-
 
         public IActionResult Register()
         {
             return View();
         }
+
         public IActionResult Login()
         {
             return View();
@@ -135,43 +141,43 @@ namespace WebSite.Controllers
 
             if (signInResult.Succeeded)
             {
-
                 await _userManager.AddClaimAsync(user, new Claim("PhotoUrl", user.PhotoUrl));
                 return RedirectToAction("Index", "Admin");
             }
             if (signInResult.IsLockedOut)
             {
                 _notyf.Error("Kullanıcı Girişi " + user.LockoutEnd + " kadar kısıtlanmıştır!");
-
                 return View(model);
             }
-            _notyf.Error("Geçersiz Kullanıcı Adı veya Parola Başarısız Giriş Sayısı :" + await _userManager.GetAccessFailedCountAsync(user) + "/3");
+            _notyf.Error("Geçersiz Kullanıcı Adı veya Parola. Başarısız Giriş Sayısı: " + await _userManager.GetAccessFailedCountAsync(user) + "/3");
             return View();
         }
-
 
         [HttpPost]
         public async Task<IActionResult> Register(RegisterModel model)
         {
-            var identityResult = await _userManager.CreateAsync(new() { UserName = model.UserName, Email = model.Email, FullName = model.FullName, PhotoUrl = "default-avatar.png" }, model.Password);
+            var identityResult = await _userManager.CreateAsync(
+                new AppUser
+                {
+                    UserName = model.UserName,
+                    Email = model.Email,
+                    FullName = model.FullName,
+                    PhotoUrl = "default-avatar.png"
+                },
+                model.Password);
 
             if (!identityResult.Succeeded)
             {
                 foreach (var item in identityResult.Errors)
                 {
                     ModelState.AddModelError("", item.Description);
-
-
                     _notyf.Error(item.Description);
                 }
-
                 return View(model);
             }
 
-            // default olarak Uye rolü ekleme
             var user = await _userManager.FindByNameAsync(model.UserName);
-            var roleExist = await _roleManager.RoleExistsAsync("Uye");
-            if (!roleExist)
+            if (!await _roleManager.RoleExistsAsync("Uye"))
             {
                 var role = new AppRole { Name = "Uye" };
                 await _roleManager.CreateAsync(role);
@@ -179,26 +185,25 @@ namespace WebSite.Controllers
 
             await _userManager.AddToRoleAsync(user, "Uye");
 
-            _notyf.Success("Üye Kaydı Yapılmıştır. Oturum Açınız");
+            _notyf.Success("Üye Kaydı Yapılmıştır. Oturum Açınız.");
             return RedirectToAction("Login");
         }
-
 
         public async Task<IActionResult> Logout()
         {
             await _signInManager.SignOutAsync();
             return RedirectToAction("Login");
         }
+
         public IActionResult AccessDenied()
         {
             return View();
         }
+
         public IActionResult Privacy()
         {
             return View();
         }
-
-
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
@@ -207,4 +212,3 @@ namespace WebSite.Controllers
         }
     }
 }
-

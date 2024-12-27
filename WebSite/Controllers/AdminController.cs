@@ -7,9 +7,10 @@ namespace WebSite.Controllers
     public class AdminController : Controller
     {
        
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
             return View();
         }
+
     }
 }

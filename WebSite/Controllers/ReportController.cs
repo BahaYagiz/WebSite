@@ -5,8 +5,11 @@ using WebSite.Repositories;
 using System.IO;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using WebSite.ViewModels;
-using AspNetCoreHero.ToastNotification.Abstractions;
+using AspNetCoreHero.ToastNotification;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
+using WebSite.Hubs;
+using AspNetCoreHero.ToastNotification.Abstractions;
 
 namespace WebSite.Controllers
 {
@@ -16,18 +19,22 @@ namespace WebSite.Controllers
         private readonly ReportRepository _reportRepository;
         private readonly CategoryRepository _categoryRepository;
         private readonly IMapper _mapper;
+        private readonly INotyfService _notyf;
+        private readonly IHubContext<GeneralHub> _generalHub;
 
-        public ReportController(ReportRepository reportRepository, CategoryRepository categoryRepository, IMapper mapper)
+        public ReportController(ReportRepository reportRepository, CategoryRepository categoryRepository, IMapper mapper, INotyfService notyf, IHubContext<GeneralHub> generalHub)
         {
             _reportRepository = reportRepository;
             _categoryRepository = categoryRepository;
             _mapper = mapper;
+            _generalHub = generalHub;
+            _notyf = notyf;
         }
 
         public async Task<IActionResult> Index()
         {
             var reports = await _reportRepository.GetAllAsync();
-            var reportModels = _mapper.Map<List<ReportModel>>(reports); // Report -> ReportModel dönüşümü
+            var reportModels = _mapper.Map<List<ReportModel>>(reports);
             return View(reportModels);
         }
 
@@ -47,7 +54,7 @@ namespace WebSite.Controllers
         [HttpPost]
         public async Task<IActionResult> Add(ReportModel model)
         {
-            if (ModelState.IsValid)
+            try
             {
                 if (Request.Form.Files.Count > 0)
                 {
@@ -61,28 +68,22 @@ namespace WebSite.Controllers
                         }
                         model.PhotoUrl = "/uploads/" + photoFile.FileName;
                     }
-                    else
-                    {
-                        ModelState.AddModelError("PhotoUrl", "Fotoğraf yüklemek zorunludur.");
-                    }
                 }
 
-                // ReportModel'dan Report'a dönüştürme
                 var report = _mapper.Map<Report>(model);
                 await _reportRepository.AddAsync(report);
 
-                TempData["Success"] = "Haber başarıyla eklendi!";
+                int repCount = _reportRepository.Where(c => c.IsActive == true).Count();
+                await _generalHub.Clients.All.SendAsync("onReportAdd", repCount);
+
+                _notyf.Success("Haber başarıyla eklendi!");
                 return RedirectToAction("Index");
             }
-
-            var categories = (await _categoryRepository.GetAllAsync())
-                .Select(x => new SelectListItem()
-                {
-                    Text = x.Name,
-                    Value = x.Id.ToString()
-                });
-            ViewBag.Categories = categories;
-            return View(model);
+            catch
+            {
+                _notyf.Error("Haber eklenirken bir hata oluştu.");
+                return View(model);
+            }
         }
 
         public async Task<IActionResult> Update(int id)
@@ -96,23 +97,21 @@ namespace WebSite.Controllers
 
             ViewBag.Categories = categories;
             var report = await _reportRepository.GetByIdAsync(id);
-            var reportModel = _mapper.Map<ReportModel>(report); // Report -> ReportModel dönüşümü
+            var reportModel = _mapper.Map<ReportModel>(report);
             return View(reportModel);
         }
 
         [HttpPost]
         public async Task<IActionResult> Update(ReportModel model)
         {
-            if (ModelState.IsValid)
+            try
             {
-                // Fotoğraf güncelleme işlemi
                 if (Request.Form.Files.Count > 0)
                 {
                     var photoFile = Request.Form.Files[0];
 
                     if (photoFile != null && photoFile.Length > 0)
                     {
-                        // Eski fotoğrafı sil
                         if (!string.IsNullOrEmpty(model.PhotoUrl))
                         {
                             var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", model.PhotoUrl.TrimStart('/'));
@@ -122,7 +121,6 @@ namespace WebSite.Controllers
                             }
                         }
 
-                        // Yeni fotoğrafı kaydet
                         var fileName = Path.GetFileName(photoFile.FileName);
                         var uniqueFileName = Path.GetFileNameWithoutExtension(fileName) + "_" + Guid.NewGuid().ToString() + Path.GetExtension(fileName);
                         var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", uniqueFileName);
@@ -134,61 +132,58 @@ namespace WebSite.Controllers
 
                         model.PhotoUrl = "/uploads/" + uniqueFileName;
                     }
-                    else
-                    {
-                        ModelState.AddModelError("PhotoUrl", "Fotoğraf yüklemek zorunludur.");
-                    }
                 }
 
-                if (string.IsNullOrEmpty(model.PhotoUrl))
-                {
-                    model.PhotoUrl = null;
-                }
-
-                // ReportModel'dan Report'a dönüşüm ve güncelleme
                 var report = _mapper.Map<Report>(model);
                 await _reportRepository.UpdateAsync(report);
 
-                TempData["Success"] = "Haber başarıyla güncellendi!";
+                int repCount = _reportRepository.Where(c => c.IsActive == true).Count();
+                await _generalHub.Clients.All.SendAsync("onReportUpdate", repCount);
+
+                _notyf.Success("Haber başarıyla güncellendi!");
                 return RedirectToAction("Index");
             }
-
-            var categories = (await _categoryRepository.GetAllAsync())
-                .Select(x => new SelectListItem()
-                {
-                    Text = x.Name,
-                    Value = x.Id.ToString()
-                });
-            ViewBag.Categories = categories;
-            return View(model);
+            catch
+            {
+                _notyf.Error("Haber güncellenirken bir hata oluştu.");
+                return View(model);
+            }
         }
 
         public async Task<IActionResult> Delete(int id)
         {
             var report = await _reportRepository.GetByIdAsync(id);
-            var reportModel = _mapper.Map<ReportModel>(report); // Report -> ReportModel dönüşümü
+            var reportModel = _mapper.Map<ReportModel>(report);
             return View(reportModel);
         }
 
         [HttpPost]
         public async Task<IActionResult> Delete(ReportModel model)
         {
-            // Fotoğrafı sil
-            if (!string.IsNullOrEmpty(model.PhotoUrl))
+            try
             {
-                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", model.PhotoUrl.TrimStart('/'));
-                if (System.IO.File.Exists(filePath))
+                if (!string.IsNullOrEmpty(model.PhotoUrl))
                 {
-                    System.IO.File.Delete(filePath);
+                    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", model.PhotoUrl.TrimStart('/'));
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        System.IO.File.Delete(filePath);
+                    }
                 }
+
+                await _reportRepository.DeleteAsync(model.Id);
+
+                int repCount = _reportRepository.Where(c => c.IsActive == true).Count();
+                await _generalHub.Clients.All.SendAsync("onReportDelete", repCount);
+
+                _notyf.Success("Haber başarıyla silindi!");
+                return RedirectToAction("Index");
             }
-
-            // Veritabanından silme
-            await _reportRepository.DeleteAsync(model.Id);
-
-            // Başarı mesajı
-            TempData["Success"] = "Haber başarıyla silindi!";
-            return RedirectToAction("Index");
+            catch
+            {
+                _notyf.Error("Haber silinirken bir hata oluştu.");
+                return View(model);
+            }
         }
     }
 }
